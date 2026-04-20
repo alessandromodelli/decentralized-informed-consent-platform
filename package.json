@@ -1,0 +1,9 @@
+{
+  "name": "consent-dapp",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "contracts": "cd packages/contracts && npx hardhat",
+    "frontend":  "cd packages/frontend  && npm run dev"
+  }
+}
