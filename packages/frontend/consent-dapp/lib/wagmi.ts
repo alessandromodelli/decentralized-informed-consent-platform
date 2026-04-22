@@ -2,10 +2,12 @@
 import { createConfig, http } from "wagmi";
 import { polygonAmoy } from "wagmi/chains";
 import { getDefaultConfig } from "connectkit";
+import { injected } from "wagmi/connectors";
 
 export const config = createConfig(
   getDefaultConfig({
     chains: [polygonAmoy],
+    connectors: [injected()], // Nessun connettore, solo MetaMask
     transports: {
       // RPC pubblico Polygon
       //[polygonAmoy.id]: http("https://rpc-amoy.polygon.technology"),

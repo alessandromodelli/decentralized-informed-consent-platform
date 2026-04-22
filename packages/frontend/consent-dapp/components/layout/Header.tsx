@@ -76,51 +76,44 @@ export function Header() {
           })}
         </nav>
 
-        {/* Wallet Connect + Mobile Menu */}
+        {/* Wallet Connect*/}
         <div className="flex items-center gap-2">
-          <div className="hidden sm:block">
-            <ConnectKitButton />
-          </div>
-          <div className="sm:hidden">
-            <ConnectKitButton />
-          </div>
+          <ConnectKitButton.Custom>
+            {({ isConnected, show, truncatedAddress, ensName }) => {
+              return (
+                <div
+                  onClick={show}
+                  className={`
+          relative group cursor-pointer select-none
+          flex items-center gap-2
+          px-4 py-2 rounded-xl
+          text-sm 
+          transition-all duration-200 ease-out
+          ${
+            isConnected
+              ? "bg-zinc-700 text-emerald-400 border border-emerald-500/30 hover:border-emerald-400/60 hover:bg-zinc-800 shadow-[0_0_12px_rgba(52,211,153,0.1)] hover:shadow-[0_0_20px_rgba(52,211,153,0.2)]"
+              : "bg-zinc-700 text-white hover:bg-zinc-900 shadow-sm hover:shadow-md"
+          }
+        `}
+                >
+                  {/* Dot di stato */}
+                  {isConnected && (
+                    <span className="w-2 h-2 rounded-full flex-shrink-0 bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse" />
+                  )}
 
-          {/* Mobile Menu */}
-          {/* <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Apri menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <nav className="mt-8 flex flex-col gap-2">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Button
-                        variant={isActive ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start gap-3",
-                          isActive &&
-                            "bg-primary/10 text-primary hover:bg-primary/15"
-                        )}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {item.name}
-                      </Button>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </SheetContent>
-          </Sheet> */}
+                  {/* Label */}
+                  <span>
+                    {isConnected
+                      ? (ensName ??
+                        truncatedAddress?.slice(0, 4) +
+                          "…" +
+                          truncatedAddress?.slice(-2))
+                      : "Connect Wallet"}
+                  </span>
+                </div>
+              );
+            }}
+          </ConnectKitButton.Custom>
         </div>
       </div>
     </header>
