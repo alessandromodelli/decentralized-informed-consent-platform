@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-e86b7c30dfdda71d5842180f6ff3569a6ade2d58",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.0"
+  },
+  "userSourceNameMap": {
+    "contracts/ConsentManager.sol": "project/contracts/ConsentManager.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/ConsentManager.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\n/**\n * ConsentManager\n * Gestione del consenso informato sanitario on-chain.\n * Nessun dato sensibile on-chain. Il CID IPFS è emesso solo via evento,\n * mai salvato nello storage. La revoca invalida logicamente il consenso\n * ma non cancella l'hash (immutabilità della blockchain).\n */\ncontract ConsentManager {\n\n    /// Limite per paziente per evitare array unbounded e gas DoS.\n    uint8 public constant MAX_CONSENTS_PER_PATIENT = 100;\n\n    struct Consent {\n        bytes32 documentHash;\n        uint256 timestamp;\n        uint8   version;   // max 255 re-consensi sullo stesso documento\n        bool    isValid;\n    }\n\n    // Storage\n\n    // patient → documentHash → Consent\n    mapping(address => mapping(bytes32 => Consent)) private consents;\n\n    // patient → lista hash (per UI e iterazione). Cappata a MAX_CONSENTS_PER_PATIENT.\n    mapping(address => bytes32[]) private patientConsentHashes;\n\n    // Traccia se un hash è già nell'array (per evitare duplicati al re-consenso).\n    mapping(address => mapping(bytes32 => bool)) private hashRegistered;\n\n    // Events\n    event ConsentGiven(\n        address indexed patient,\n        bytes32 indexed documentHash,\n        string          ipfsCid,     // off-chain reference — solo nell'evento \n        uint256         timestamp,\n        uint8           version\n    );\n\n    event ConsentRevoked(\n        address indexed patient,\n        bytes32 indexed documentHash,\n        uint256         timestamp\n    );\n\n    // Custom errors\n    error InvalidDocumentHash();\n    error ConsentAlreadyActive(bytes32 documentHash);\n    error ConsentNotFound(bytes32 documentHash);\n    error ConsentAlreadyRevoked(bytes32 documentHash);\n    error TooManyConsents();\n    error EmptyCid();\n\n    // External functions\n\n    /**\n     * Il paziente fornisce il consenso per un documento.\n     * @param  documentHash  calcolato off-chain.\n     * @param  ipfsCid       CID IPFS del documento. Non salvato nello storage, solo emesso nell'evento.\n     */\n    function giveConsent(\n        bytes32        documentHash,\n        string calldata ipfsCid\n    ) external {\n        if (documentHash == bytes32(0))    revert InvalidDocumentHash();\n        if (bytes(ipfsCid).length == 0)    revert EmptyCid();\n\n        Consent storage c = consents[msg.sender][documentHash];\n\n        // Blocca re-consenso su documento già attivo (ammesso solo dopo revoca)\n        if (c.timestamp != 0 && c.isValid) revert ConsentAlreadyActive(documentHash);\n\n        // Incrementa version (parte da 0, quindi primo consenso = version 1)\n        uint8 newVersion = c.version + 1;\n\n        // Aggiorna lo stato — CID non salvato qui\n        c.documentHash = documentHash;\n        c.timestamp    = block.timestamp;\n        c.version      = newVersion;\n        c.isValid      = true;\n\n        // Registra nell'array solo la prima volta (guard contro duplicati)\n        if (!hashRegistered[msg.sender][documentHash]) {\n            if (patientConsentHashes[msg.sender].length >= MAX_CONSENTS_PER_PATIENT)\n                revert TooManyConsents();\n            patientConsentHashes[msg.sender].push(documentHash);\n            hashRegistered[msg.sender][documentHash] = true;\n        }\n\n        // CID emesso solo nell'evento — non permanente nello storage\n        emit ConsentGiven(msg.sender, documentHash, ipfsCid, block.timestamp, newVersion);\n    }\n\n    /**\n     * Il paziente revoca il consenso per un documento specifico.\n     * @param  documentHash  Hash del documento da revocare.\n     */\n    function revokeConsent(bytes32 documentHash) external {\n        Consent storage c = consents[msg.sender][documentHash];\n\n        if (c.timestamp == 0) revert ConsentNotFound(documentHash);\n        if (!c.isValid)       revert ConsentAlreadyRevoked(documentHash);\n\n        c.isValid = false;\n\n        emit ConsentRevoked(msg.sender, documentHash, block.timestamp);\n    }\n\n    /**\n     * Verifica pubblica della validità di un consenso.\n     * @param  patient       Address del paziente.\n     * @param  documentHash  Hash del documento.\n     * @return isValid       true se il consenso è attivo e non revocato.\n     * @return timestamp     Timestamp dell'ultima operazione giveConsent.\n     * @return version       Numero di revisione (1 = primo consenso, 2 = re-consenso, …).\n     */\n    function isConsentValid(\n        address patient,\n        bytes32 documentHash\n    ) external view returns (\n        bool    isValid,\n        uint256 timestamp,\n        uint8   version\n    ) {\n        Consent storage c = consents[patient][documentHash];\n        return (c.isValid, c.timestamp, c.version);\n    }\n\n    /**\n     * Restituisce la lista degli hash dei documenti per cui il paziente\n     * ha mai dato consenso (inclusi quelli poi revocati).\n     * @param  patient  Address del paziente.\n     * @return          Array di bytes32 (documentHash).\n     */\n    function getPatientConsents(\n        address patient\n    ) external view returns (bytes32[] memory) {\n        return patientConsentHashes[patient];\n    }\n\n    /**\n     * Restituisce il numero di documenti registrati per un paziente.\n     * Utile per paginazione lato frontend senza caricare l'array completo.\n     */\n    function getPatientConsentCount(\n        address patient\n    ) external view returns (uint256) {\n        return patientConsentHashes[patient].length;\n    }\n}"
+      }
+    }
+  }
+}

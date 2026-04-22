@@ -3,10 +3,27 @@ Decentralized informed consent management for healthcare. Solidity smart contrac
 
 # Test smart-contract ConsentManager.sol
 
-´´´
-## Test locale (istantaneo, gratis)
-npx hardhat ignition deploy ignition/modules/ConsentManager.ts
 
+## Test locale
+### Deployment contratto 
+All'interno della cartella contracts: 
+´´´
+npx hardhat ignition deploy ignition/modules/ConsentManager.ts --network localhost
+´´´
+Copiare il codice identificativo del contratto e inserirlo nel .env del frontend come NEXT_PUBLIC_CONTRACT_ADDRESS
+
+### Avvio nodo locale
+´´´
+npx hardhat node
+´´´
+Importare uno degli account finti creati su MetaMask tramite private-key.
+
+### Avvio frontend
+´´´
+npm run dev
+´´´
+
+´´´
 ## Su Polygon Amoy (gratis con MATIC da faucet)
 npx hardhat ignition deploy ignition/modules/ConsentManager.ts --network amoy
 

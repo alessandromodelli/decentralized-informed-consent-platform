@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useConnection } from "wagmi";
-import { ConnectKitButton } from "connectkit";
+
+import ConnectWalletButton from "@/components/layout/ConnectWalletButton";
 import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { Input } from "@/components/ui/input";
-// import { Spinner } from "@/components/ui/spinner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 // import { ConsentCard } from "@/components/consent/consent-card";
 import { useGetConsents } from "@/hooks/useGetConsents";
 import {
@@ -19,6 +20,7 @@ import {
   Shield,
   AlertCircle,
 } from "lucide-react";
+import { Consent } from "@/lib/contract";
 
 export default function DashboardPage() {
   const { address, isConnected } = useConnection();
@@ -26,8 +28,8 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  // Filter consents based on search and tab
-  const filteredConsents = consents.filter((consent) => {
+//   Filter consents based on search and tab
+  const filteredConsents = consents.filter((consent: Consent) => {
     const matchesSearch =
       searchTerm === "" ||
       consent.consentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,12 +44,13 @@ export default function DashboardPage() {
     return matchesSearch && matchesTab;
   });
 
-  const activeConsents = consents.filter((c) => c.isActive);
-  const revokedConsents = consents.filter((c) => !c.isActive);
+  const activeConsents = consents.filter((c: Consent) => c.isActive);
+  const revokedConsents = consents.filter((c: Consent) => !c.isActive);
 
   // Not connected state
   if (!isConnected) {
     return (
+        
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
@@ -61,7 +64,7 @@ export default function DashboardPage() {
               Per accedere alla dashboard e gestire i tuoi consensi, connetti il
               tuo wallet.
             </p>
-            <ConnectKitButton />
+            <ConnectWalletButton />
           </CardContent>
         </Card>
       </div>
@@ -208,12 +211,13 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {filteredConsents.map((consent) => (
-                    <ConsentCard
-                      key={consent.id.toString()}
-                      consent={consent}
-                      showRevokeButton
-                    />
+                  {filteredConsents.map((consent: Consent) => (
+                    // <ConsentCard
+                    //   key={consent.id.toString()}
+                    //   consent={consent}
+                    //   showRevokeButton
+                    // />
+                    <div>{consent.consentType}</div>
                   ))}
                 </div>
               )}

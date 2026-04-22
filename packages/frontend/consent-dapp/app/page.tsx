@@ -9,6 +9,7 @@ import {
   Shield,
   ArrowRight,
 } from "lucide-react";
+import ConnectWalletButton from "@/components/layout/ConnectWalletButton";
 
 
 const steps = [
@@ -64,7 +65,7 @@ export default function HomePage() {
                 </Button>
               </Link>
             ) : (
-              <ConnectKitButton label="Inizia ora!" />
+              <ConnectWalletButton label="Inizia ora!"/>
             )}
             <Link href="/verify">
               <Button variant="outline" size="lg">
