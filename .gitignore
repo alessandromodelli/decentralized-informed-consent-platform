@@ -6,3 +6,4 @@ artifacts-foundry/
 cache/
 .next/
 out/
+.claude/
