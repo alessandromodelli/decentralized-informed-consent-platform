@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 // import { ConsentCard } from "@/components/consent/consent-card";
-import { useGetConsents } from "@/hooks/useGetConsents";
+import { ConsentRecord, useGetConsents } from "@/hooks/useGetConsents";
 import {
   FileCheck,
   FileX,
@@ -19,39 +19,41 @@ import {
   Search,
   Shield,
   AlertCircle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { Consent } from "@/lib/contract";
 
 export default function DashboardPage() {
   const { address, isConnected } = useConnection();
-  const { consents, isLoading, error } = useGetConsents();
+  const { consents, isLoading, error, activeConsents, revokedConsents } =
+    useGetConsents();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-//   Filter consents based on search and tab
-  const filteredConsents = consents.filter((consent: Consent) => {
+  //   Filter consents based on search and tab
+  const filteredConsents = consents.filter((consent: ConsentRecord) => {
     const matchesSearch =
       searchTerm === "" ||
-      consent.consentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consent.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consent.id.toString().includes(searchTerm);
+      consent.documentHash.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consent.timestamp.toString().includes(searchTerm) ||
+      consent.version.toString().includes(searchTerm);
 
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "active" && consent.isActive) ||
-      (activeTab === "revoked" && !consent.isActive);
+      (activeTab === "active" && consent.isValid) ||
+      (activeTab === "revoked" && !consent.isValid);
 
     return matchesSearch && matchesTab;
   });
 
-  const activeConsents = consents.filter((c: Consent) => c.isActive);
-  const revokedConsents = consents.filter((c: Consent) => !c.isActive);
-
   console.log("Consents", consents);
+  console.log("Active Consents", activeConsents);
+  console.log("Revoked Consents", revokedConsents);
+
   // Not connected state
   if (!isConnected) {
     return (
-        
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
         <Card className="w-full max-w-md text-center">
           <CardHeader>
@@ -152,11 +154,13 @@ export default function DashboardPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
-              <TabsTrigger value="all">
-                Tutti ({consents.length})
-              </TabsTrigger>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full flex flex-col"
+          >
+            <TabsList className="mb-6 w-full">
+              <TabsTrigger value="all">Tutti ({consents.length})</TabsTrigger>
               <TabsTrigger value="active">
                 Attivi ({activeConsents.length})
               </TabsTrigger>
@@ -212,14 +216,48 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {filteredConsents.map((consent: Consent, index: number, ) => (
-                    // <ConsentCard
-                    //   key={consent.id.toString()}
-                    //   consent={consent}
-                    //   showRevokeButton
-                    // />
-                    <div key={index}><label></label></div>
-                  ))}
+                  {filteredConsents.map(
+                    (consent: ConsentRecord, index: number) => (
+                      <div
+                        key={index}
+                        className={`rounded-lg border p-4 transition-colors ${
+                          consent.isValid
+                            ? "border-emerald-500/20 bg-emerald-500/5"
+                            : "border-destructive/20 bg-destructive/5"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {consent.isValid ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-destructive" />
+                            )}
+                            <span
+                              className={`text-xs font-medium ${
+                                consent.isValid
+                                  ? "text-emerald-600"
+                                  : "text-destructive"
+                              }`}
+                            >
+                              {consent.isValid ? "Attivo" : "Revocato"}
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            v{consent.version}
+                          </span>
+                        </div>
+                        <p className="break-all font-mono text-xs text-muted-foreground">
+                          {consent.documentHash}
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {new Date(
+                            Number(consent.timestamp) * 1000,
+                          ).toLocaleString("it-IT")}
+                        </p>
+                      </div>
+                    ),
+                  )}
                 </div>
               )}
             </TabsContent>
