@@ -25,6 +25,7 @@ export function useGetConsents(patientAddress?: Address) {
     },
   });
 
+  console.log("data", data);
   return {
     consents: (data as Consent[] | undefined) || [],
     isLoading,

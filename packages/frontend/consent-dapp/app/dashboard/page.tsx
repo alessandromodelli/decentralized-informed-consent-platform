@@ -47,6 +47,7 @@ export default function DashboardPage() {
   const activeConsents = consents.filter((c: Consent) => c.isActive);
   const revokedConsents = consents.filter((c: Consent) => !c.isActive);
 
+  console.log("Consents", consents);
   // Not connected state
   if (!isConnected) {
     return (
@@ -211,13 +212,13 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {filteredConsents.map((consent: Consent) => (
+                  {filteredConsents.map((consent: Consent, index: number, ) => (
                     // <ConsentCard
                     //   key={consent.id.toString()}
                     //   consent={consent}
                     //   showRevokeButton
                     // />
-                    <div>{consent.consentType}</div>
+                    <div key={index}><label></label></div>
                   ))}
                 </div>
               )}
