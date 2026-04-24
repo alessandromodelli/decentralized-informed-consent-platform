@@ -16,7 +16,6 @@ export function useVerifyConsent(
   patientAddress?: Address,
   documentHash?: `0x${string}`,
 ) {
-  console.log(patientAddress, documentHash)
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONSENT_CONTRACT_ADDRESS,
     abi: CONSENT_CONTRACT_ABI,
@@ -33,7 +32,6 @@ export function useVerifyConsent(
 
   const result = data as [boolean, bigint, number] | undefined;
 
-  console.log("result", result)
   return {
     isValid: result?.[0] ?? false,
     timestamp: result?.[1] ?? BigInt(0),
