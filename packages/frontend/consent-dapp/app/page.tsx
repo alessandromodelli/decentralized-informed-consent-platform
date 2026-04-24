@@ -89,7 +89,7 @@ export default function HomePage() {
             {steps.map((step, index) => (
               <div key={step.number} className="relative">
                 {index < steps.length - 1 && (
-                  <div className="absolute right-0 top-8 hidden h-0.5 w-full translate-x-1/2 bg-gradient-to-r from-primary/50 to-transparent lg:block" />
+                  <div className="absolute right-0 top-8 hidden h-0.5 w-full translate-x-[60%] bg-gradient-to-r from-primary/50 to-transparent lg:block" />
                 )}
                 <div className="flex flex-col items-center text-center">
                   <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-xl font-bold text-primary-foreground">

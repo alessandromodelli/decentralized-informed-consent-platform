@@ -22,8 +22,6 @@ export async function POST(req: NextRequest) {
     // Upload
     const upload = await pinata.upload.public.file(file);
 
-    console.log("Upload completato, CID:", upload.cid);
-
     // Ritorna solo il CID
     return NextResponse.json({ cid: upload.cid });
 

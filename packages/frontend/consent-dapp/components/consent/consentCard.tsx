@@ -3,14 +3,9 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  ExternalLink,
-  FileCheck,
-  FileX,
-  Clock,
-  Hash,
-} from "lucide-react";
+import { ExternalLink, FileCheck, FileX, Clock, Hash, Check, Copy } from "lucide-react";
 import { type ConsentRecord } from "@/hooks/useGetConsents";
+import { useState } from "react";
 
 interface ConsentCardProps {
   consent: ConsentRecord;
@@ -25,25 +20,25 @@ function formatRelativeTime(timestamp: bigint): string {
 
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
-  const hours   = Math.floor(minutes / 60);
-  const days    = Math.floor(hours / 24);
-  const months  = Math.floor(days / 30);
-  const years   = Math.floor(days / 365);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
 
-  if (seconds < 60)  return "pochi secondi fa";
-  if (minutes < 60)  return `${minutes} minut${minutes === 1 ? "o" : "i"} fa`;
-  if (hours < 24)    return `${hours} or${hours === 1 ? "a" : "e"} fa`;
-  if (days < 30)     return `${days} giorn${days === 1 ? "o" : "i"} fa`;
-  if (months < 12)   return `${months} mes${months === 1 ? "e" : "i"} fa`;
+  if (seconds < 60) return "pochi secondi fa";
+  if (minutes < 60) return `${minutes} minut${minutes === 1 ? "o" : "i"} fa`;
+  if (hours < 24) return `${hours} or${hours === 1 ? "a" : "e"} fa`;
+  if (days < 30) return `${days} giorn${days === 1 ? "o" : "i"} fa`;
+  if (months < 12) return `${months} mes${months === 1 ? "e" : "i"} fa`;
   return `${years} ann${years === 1 ? "o" : "i"} fa`;
 }
 
 function formatDate(timestamp: bigint): string {
   return new Date(Number(timestamp) * 1000).toLocaleDateString("it-IT", {
-    day:   "2-digit",
+    day: "2-digit",
     month: "2-digit",
-    year:  "numeric",
-    hour:  "2-digit",
+    year: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
   });
 }
@@ -53,6 +48,13 @@ export function ConsentCard({
   onRevoke,
   showRevokeButton = false,
 }: ConsentCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(consent.documentHash);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <Card
       className={`transition-all ${
@@ -76,7 +78,8 @@ export function ConsentCard({
           </div>
           <div>
             <h3 className="font-mono text-sm font-semibold text-foreground">
-              {consent.documentHash.slice(0, 10)}…{consent.documentHash.slice(-6)}
+              {consent.documentHash.slice(0, 10)}…
+              {consent.documentHash.slice(-6)}
             </h3>
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <Clock className="h-3 w-3" />
@@ -103,9 +106,23 @@ export function ConsentCard({
               <Hash className="h-4 w-4" />
               Document Hash
             </span>
-            <span className="font-mono text-xs text-foreground">
-              {consent.documentHash.slice(0, 10)}…{consent.documentHash.slice(-6)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs">
+                {consent.documentHash.slice(0, 10)}…
+                {consent.documentHash.slice(-6)}
+              </span>
+              <button
+                onClick={handleCopy}
+                className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                title="Copia hash completo"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">

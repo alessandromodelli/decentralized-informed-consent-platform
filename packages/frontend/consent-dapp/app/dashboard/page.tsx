@@ -49,10 +49,6 @@ export default function DashboardPage() {
     return matchesSearch && matchesTab;
   });
 
-  console.log("Consents", consents);
-  console.log("Active Consents", activeConsents);
-  console.log("Revoked Consents", revokedConsents);
-
   // Not connected state
   if (!isConnected) {
     return <ConnectWalletCard />;
