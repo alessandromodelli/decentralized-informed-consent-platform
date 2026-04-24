@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAccount, useConnection } from "wagmi";
-import ConnectButton from "@/components/layout/ConnectWalletButton";
+import { useConnection } from "wagmi";
+import ConnectWalletButton from "@/components/layout/ConnectWalletButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Upload,
 } from "lucide-react";
+import ConnectWalletCard from "@/components/layout/ConnectWalletCard";
 
 type ConsentState =
   | "idle"
@@ -53,13 +54,13 @@ export default function GiveConsentPage() {
   } | null>(null);
   const [fileError, setFileError] = useState<string>("");
 
-  // redirect automatico dopo successo
-  useEffect(() => {
-    if (isSuccess && consentState === "done") {
-      const timer = setTimeout(() => router.push("/dashboard"), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isSuccess, consentState, router]);
+  // // redirect automatico dopo successo
+  // useEffect(() => {
+  //   if (isSuccess && consentState === "done") {
+  //     const timer = setTimeout(() => router.push("/dashboard"), 3000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isSuccess, consentState, router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -95,7 +96,7 @@ export default function GiveConsentPage() {
       }
     } catch (err) {
       console.error("Errore durante il consenso:", err);
-      // consentState è già "error" — gestito dentro submitConsent
+      setConsentState("error");
     }
   };
 
@@ -110,30 +111,12 @@ export default function GiveConsentPage() {
     error: "Riprova",
   };
 
-  // Not connected
+  // Not connected state
   if (!isConnected) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
-        <Empty className="max-w-md border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Shield className="h-6 w-6" />
-            </EmptyMedia>
-            <EmptyTitle>Connetti il tuo Wallet</EmptyTitle>
-            <EmptyDescription>
-              Per fornire un consenso, devi prima connettere il tuo wallet.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <ConnectButton />
-          </EmptyContent>
-        </Empty>
-      </div>
-    );
+    return <ConnectWalletCard />;
   }
 
   // Success
-
   if (consentState === "done" && result) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">

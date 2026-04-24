@@ -23,6 +23,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { Consent } from "@/lib/contract";
+import { ConsentCard } from "@/components/consent/consentCard";
+import ConnectWalletCard from "@/components/layout/ConnectWalletCard";
 
 export default function DashboardPage() {
   const { address, isConnected } = useConnection();
@@ -53,25 +55,7 @@ export default function DashboardPage() {
 
   // Not connected state
   if (!isConnected) {
-    return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
-        <Card className="w-full max-w-md text-center">
-          <CardHeader>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Shield className="h-8 w-8 text-primary" />
-            </div>
-            <CardTitle>Connetti il tuo Wallet</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Per accedere alla dashboard e gestire i tuoi consensi, connetti il
-              tuo wallet.
-            </p>
-            <ConnectWalletButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <ConnectWalletCard />;
   }
 
   return (
@@ -155,16 +139,18 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <Tabs
-            value={activeTab}
+            defaultValue={activeTab}
             onValueChange={setActiveTab}
             className="w-full flex flex-col"
           >
             <TabsList className="mb-6 w-full">
-              <TabsTrigger value="all">Tutti ({consents.length})</TabsTrigger>
-              <TabsTrigger value="active">
+              <TabsTrigger value="all" className={activeTab === "all" ? "bg-primary/80 text-white font-bold" : ""}>
+                Tutti ({consents.length})
+              </TabsTrigger>
+              <TabsTrigger value="active" className={activeTab === "active" ? "bg-primary/80 text-white font-bold" : ""}>
                 Attivi ({activeConsents.length})
               </TabsTrigger>
-              <TabsTrigger value="revoked">
+              <TabsTrigger value="revoked" className={activeTab === "revoked" ? "bg-primary/80 text-white font-bold" : ""}>
                 Revocati ({revokedConsents.length})
               </TabsTrigger>
             </TabsList>
@@ -218,44 +204,7 @@ export default function DashboardPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {filteredConsents.map(
                     (consent: ConsentRecord, index: number) => (
-                      <div
-                        key={index}
-                        className={`rounded-lg border p-4 transition-colors ${
-                          consent.isValid
-                            ? "border-emerald-500/20 bg-emerald-500/5"
-                            : "border-destructive/20 bg-destructive/5"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {consent.isValid ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-destructive" />
-                            )}
-                            <span
-                              className={`text-xs font-medium ${
-                                consent.isValid
-                                  ? "text-emerald-600"
-                                  : "text-destructive"
-                              }`}
-                            >
-                              {consent.isValid ? "Attivo" : "Revocato"}
-                            </span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            v{consent.version}
-                          </span>
-                        </div>
-                        <p className="break-all font-mono text-xs text-muted-foreground">
-                          {consent.documentHash}
-                        </p>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          {new Date(
-                            Number(consent.timestamp) * 1000,
-                          ).toLocaleString("it-IT")}
-                        </p>
-                      </div>
+                      <ConsentCard key={index} consent={consent} />
                     ),
                   )}
                 </div>
