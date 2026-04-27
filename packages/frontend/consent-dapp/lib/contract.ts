@@ -247,16 +247,3 @@ export interface Consent {
   revokedAt: bigint;
 }
 
-// Consent types commonly used in healthcare
-export const CONSENT_TYPES = [
-  { value: "treatment", label: "Trattamento Medico" },
-  { value: "surgery", label: "Intervento Chirurgico" },
-  { value: "anesthesia", label: "Anestesia" },
-  { value: "data_sharing", label: "Condivisione Dati Sanitari" },
-  { value: "research", label: "Ricerca Clinica" },
-  { value: "imaging", label: "Diagnostica per Immagini" },
-  { value: "blood_transfusion", label: "Trasfusione di Sangue" },
-  { value: "vaccination", label: "Vaccinazione" },
-  { value: "telemedicine", label: "Telemedicina" },
-  { value: "other", label: "Altro" },
-] as const;
