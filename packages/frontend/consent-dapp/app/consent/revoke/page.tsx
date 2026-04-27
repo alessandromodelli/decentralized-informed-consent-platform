@@ -32,7 +32,6 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { ConsentCard } from "@/components/consent/consentCard";
 import { ConsentRecord, useGetConsents } from "@/hooks/useGetConsents";
 import { useRevokeConsent } from "@/hooks/useRevokeConsent";
-import { CONSENT_TYPES } from "@/lib/contract";
 import {
   ArrowLeft,
   FileX,
