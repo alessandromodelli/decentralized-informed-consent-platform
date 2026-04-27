@@ -3,7 +3,7 @@
 import { useReadContract, useReadContracts } from "wagmi";
 import { useConnection } from "wagmi";
 import { type Address } from "viem";
-import { hardhat } from "wagmi/chains";
+import { polygonAmoy } from "wagmi/chains";
 import {
   CONSENT_CONTRACT_ADDRESS,
   CONSENT_CONTRACT_ABI,
@@ -31,7 +31,8 @@ export function useGetConsents(patientAddress?: Address) {
     abi: CONSENT_CONTRACT_ABI,
     functionName: "getPatientConsents",
     args: addressToQuery ? [addressToQuery] : undefined,
-    chainId: hardhat.id,
+    // chainId: hardhat.id, //Test locale
+    chainId: polygonAmoy.id,
     query: {
       enabled: !!addressToQuery,
       staleTime: 5000,
@@ -47,7 +48,8 @@ export function useGetConsents(patientAddress?: Address) {
       abi: CONSENT_CONTRACT_ABI,
       functionName: "isConsentValid",
       args: [addressToQuery!, hash],
-      chainId: hardhat.id,
+      chainId: polygonAmoy.id,
+      // chainId: hardhat.id, //Test locale
     })),
     query: {
       enabled: hashArray.length > 0 && !!addressToQuery,

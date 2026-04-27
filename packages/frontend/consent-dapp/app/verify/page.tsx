@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 import { isAddress, type Address } from "viem";
 import ConnectWalletButton from "@/components/layout/ConnectWalletButton";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import {
   Clock,
   Hash,
   ExternalLink,
-  Upload,
 } from "lucide-react";
 
 function formatRelativeTime(timestamp: bigint): string {
@@ -59,7 +58,7 @@ function truncateAddress(addr: string): string {
 }
 
 export default function VerifyPage() {
-  const { address, isConnected } = useAccount();
+  const { address, isConnected } = useConnection();
   const [patientAddress, setPatientAddress] = useState("");
   const [documentHashInput, setDocumentHashInput] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -156,6 +155,7 @@ export default function VerifyPage() {
         setCid(c);
         setCidLoading(false);
       });
+
     }
   }, [isValid, validPatient, validHash]);
 
@@ -349,9 +349,6 @@ export default function VerifyPage() {
                       <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">IPFS CID</span>
-                          {/* <DocumentHashRow
-                            documentHash={cid as `0x${string}`}
-                          /> */}
                           <div className="flex items-center justify-between gap-2">
                             <span className="flex items-center gap-2 text-sm text-muted-foreground ">
                               <Hash className="h-4 w-4" />

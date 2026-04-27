@@ -2,11 +2,17 @@
 
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { keccak256, toBytes } from "viem";
-import { hardhat } from "wagmi/chains";
+import { polygonAmoy } from "wagmi/chains";
 import { CONSENT_CONTRACT_ADDRESS, CONSENT_CONTRACT_ABI } from "@/lib/contract";
 
 type ConsentState =
-  | "idle" | "hashing" | "uploading" | "signing" | "confirming" | "done" | "error";
+  | "idle"
+  | "hashing"
+  | "uploading"
+  | "signing"
+  | "confirming"
+  | "done"
+  | "error";
 
 export function useGiveConsent() {
   const writeContract = useWriteContract();
@@ -17,16 +23,19 @@ export function useGiveConsent() {
 
   async function submitConsent(
     file: File,
-    onStateChange: (s: ConsentState) => void
+    onStateChange: (s: ConsentState) => void,
   ) {
     try {
       // Upload IPFS
       onStateChange("uploading");
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch("/api/upload-consent", { method: "POST", body: form });
+      const res = await fetch("/api/upload-consent", {
+        method: "POST",
+        body: form,
+      });
       if (!res.ok) throw new Error("Upload IPFS fallito");
-      const { cid } = await res.json() as { cid: string };
+      const { cid } = (await res.json()) as { cid: string };
 
       // Calcola documentHash dal CID
       onStateChange("hashing");
@@ -39,13 +48,15 @@ export function useGiveConsent() {
         abi: CONSENT_CONTRACT_ABI,
         functionName: "giveConsent",
         args: [documentHash, cid],
-        chainId: hardhat.id,
-        gas: BigInt(500_000),
+        // chainId: hardhat.id,
+        chainId: polygonAmoy.id,
+        // gas: BigInt(500_000),
+        maxFeePerGas: BigInt(50_000_000_000), // 50 gwei
+        maxPriorityFeePerGas: BigInt(30_000_000_000), // 30 gwei (sopra il minimo di 25)
       });
 
       onStateChange("confirming");
       return { txHash, cid, documentHash };
-
     } catch (err) {
       onStateChange("error");
       throw err;

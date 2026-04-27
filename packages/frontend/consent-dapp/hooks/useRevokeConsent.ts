@@ -1,7 +1,7 @@
 "use client";
 
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { hardhat } from "wagmi/chains";
+import { polygonAmoy } from "wagmi/chains";
 import { CONSENT_CONTRACT_ADDRESS, CONSENT_CONTRACT_ABI } from "@/lib/contract";
 
 export function useRevokeConsent() {
@@ -17,8 +17,9 @@ export function useRevokeConsent() {
       abi: CONSENT_CONTRACT_ABI,
       functionName: "revokeConsent",
       args: [consentHash],
-      chainId: hardhat.id,
-      gas: BigInt(100_000),
+      // chainId: hardhat.id,
+      chainId: polygonAmoy.id,
+      // gas: BigInt(100_000),
     });
   };
 
