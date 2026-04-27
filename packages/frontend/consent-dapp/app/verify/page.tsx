@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { isAddress, type Address } from "viem";
 import ConnectWalletButton from "@/components/layout/ConnectWalletButton";
@@ -13,8 +13,16 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useVerifyConsent } from "@/hooks/useVerifyConsent";
 import {
-  Search, Shield, CheckCircle2, XCircle,
-  AlertCircle, User, Clock, Hash, ExternalLink,
+  Search,
+  Shield,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  User,
+  Clock,
+  Hash,
+  ExternalLink,
+  Upload,
 } from "lucide-react";
 
 function formatRelativeTime(timestamp: bigint): string {
@@ -23,23 +31,26 @@ function formatRelativeTime(timestamp: bigint): string {
   const diff = now - date;
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
-  const hours   = Math.floor(minutes / 60);
-  const days    = Math.floor(hours / 24);
-  const months  = Math.floor(days / 30);
-  const years   = Math.floor(days / 365);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
 
-  if (seconds < 60)  return "pochi secondi fa";
-  if (minutes < 60)  return `${minutes} minut${minutes === 1 ? "o" : "i"} fa`;
-  if (hours < 24)    return `${hours} or${hours === 1 ? "a" : "e"} fa`;
-  if (days < 30)     return `${days} giorn${days === 1 ? "o" : "i"} fa`;
-  if (months < 12)   return `${months} mes${months === 1 ? "e" : "i"} fa`;
+  if (seconds < 60) return "pochi secondi fa";
+  if (minutes < 60) return `${minutes} minut${minutes === 1 ? "o" : "i"} fa`;
+  if (hours < 24) return `${hours} or${hours === 1 ? "a" : "e"} fa`;
+  if (days < 30) return `${days} giorn${days === 1 ? "o" : "i"} fa`;
+  if (months < 12) return `${months} mes${months === 1 ? "e" : "i"} fa`;
   return `${years} ann${years === 1 ? "o" : "i"} fa`;
 }
 
 function formatDate(timestamp: bigint): string {
   return new Date(Number(timestamp) * 1000).toLocaleDateString("it-IT", {
-    day: "2-digit", month: "2-digit", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -49,22 +60,38 @@ function truncateAddress(addr: string): string {
 
 export default function VerifyPage() {
   const { address, isConnected } = useAccount();
-  const [patientAddress, setPatientAddress]   = useState("");
+  const [patientAddress, setPatientAddress] = useState("");
   const [documentHashInput, setDocumentHashInput] = useState("");
-  const [hasSearched, setHasSearched]         = useState(false);
-  const [patientError, setPatientError]       = useState("");
-  const [hashError, setHashError]             = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+  const [patientError, setPatientError] = useState("");
+  const [hashError, setHashError] = useState("");
+  const [cid, setCid] = useState<string | null>(null);
+  const [cidLoading, setCidLoading] = useState(false);
+  // const [fileVerifyResult, setFileVerifyResult] = useState<
+  //   "idle" | "match" | "mismatch"
+  // >("idle");
+  // const [fileVerifyLoading, setFileVerifyLoading] = useState(false);
 
-  const validPatient = hasSearched && isAddress(patientAddress)
-    ? (patientAddress as Address)
-    : undefined;
+  const validPatient =
+    hasSearched && isAddress(patientAddress)
+      ? (patientAddress as Address)
+      : undefined;
 
-  const validHash = hasSearched && documentHashInput.startsWith("0x")
-    ? (documentHashInput as `0x${string}`)
-    : undefined;
+  const validHash =
+    hasSearched && documentHashInput.startsWith("0x")
+      ? (documentHashInput as `0x${string}`)
+      : undefined;
 
-  const { isValid, timestamp, version, documentHash, isLoading, error, refetch } =
-    useVerifyConsent(validPatient, validHash);
+  const {
+    isValid,
+    timestamp,
+    version,
+    documentHash,
+    isLoading,
+    error,
+    refetch,
+    fetchCidFromEvents,
+  } = useVerifyConsent(validPatient, validHash);
 
   const handleSearch = () => {
     setPatientError("");
@@ -82,8 +109,13 @@ export default function VerifyPage() {
     if (!documentHashInput) {
       setHashError("Inserisci il document hash");
       valid = false;
-    } else if (!documentHashInput.startsWith("0x") || documentHashInput.length !== 66) {
-      setHashError("Hash non valido — deve essere 0x seguito da 64 caratteri hex");
+    } else if (
+      !documentHashInput.startsWith("0x") ||
+      documentHashInput.length !== 66
+    ) {
+      setHashError(
+        "Hash non valido — deve essere 0x seguito da 64 caratteri hex",
+      );
       valid = false;
     }
 
@@ -91,6 +123,41 @@ export default function VerifyPage() {
     setHasSearched(true);
     refetch();
   };
+
+  // Verifica crittografica locale: il provider trascina il file
+  // async function handleFileVerify(e: React.ChangeEvent<HTMLInputElement>) {
+  //   setFileVerifyLoading(true);
+  //   const file = e.target.files?.[0];
+  //   if (!file || !cid || !documentHash) return;
+
+  //   // Ricalcola l'hash dal CID del file caricato
+  //   // Prima devi caricare il file su IPFS per ottenere il suo CID,
+  //   // oppure confrontare il documentHash direttamente con il file locale
+  //   // tramite una chiamata alla API route
+
+  //   const form = new FormData();
+  //   form.append("file", file);
+  //   const res = await fetch("/api/compute-hash", {
+  //     method: "POST",
+  //     body: form,
+  //   });
+  //   const { hash } = (await res.json()) as { hash: string };
+
+  //   setFileVerifyResult(
+  //     hash.toLowerCase() === documentHash.toLowerCase() ? "match" : "mismatch",
+  //   );
+  //   setFileVerifyLoading(false);
+  // }
+
+  useEffect(() => {
+    if (isValid && validPatient && validHash) {
+      setCidLoading(true);
+      fetchCidFromEvents(validPatient, validHash).then((c) => {
+        setCid(c);
+        setCidLoading(false);
+      });
+    }
+  }, [isValid, validPatient, validHash]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
@@ -112,7 +179,9 @@ export default function VerifyPage() {
           <Shield className="h-4 w-4" />
           <AlertTitle>Connetti il Wallet del Provider</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
-            <span>Per verificare un consenso, connetti il wallet del provider.</span>
+            <span>
+              Per verificare un consenso, connetti il wallet del provider.
+            </span>
             <ConnectWalletButton />
           </AlertDescription>
         </Alert>
@@ -178,7 +247,9 @@ export default function VerifyPage() {
 
           {isConnected && (
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="text-xs text-muted-foreground">Stai verificando come:</p>
+              <p className="text-xs text-muted-foreground">
+                Stai verificando come:
+              </p>
               <p className="font-mono text-sm break-all">{address}</p>
             </div>
           )}
@@ -197,13 +268,15 @@ export default function VerifyPage() {
                 <div>
                   <p className="font-medium">Errore nella Verifica</p>
                   <p className="text-sm text-muted-foreground">
-                    {error.message || "Impossibile verificare il consenso. Riprova."}
+                    {error.message ||
+                      "Impossibile verificare il consenso. Riprova."}
                   </p>
                 </div>
-                <Button variant="outline" onClick={() => refetch()}>Riprova</Button>
+                <Button variant="outline" onClick={() => refetch()}>
+                  Riprova
+                </Button>
               </CardContent>
             </Card>
-
           ) : isValid ? (
             <Card className="border-emerald-500/50">
               <CardHeader className="pb-4">
@@ -212,7 +285,9 @@ export default function VerifyPage() {
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                     Consenso Valido
                   </CardTitle>
-                  <Badge className="bg-emerald-500/10 text-emerald-600">Attivo</Badge>
+                  <Badge className="bg-emerald-500/10 text-emerald-600">
+                    Attivo
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -243,7 +318,9 @@ export default function VerifyPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Versione</span>
+                    <span className="text-sm text-muted-foreground">
+                      Versione
+                    </span>
                     <span className="text-sm">v{version}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -257,13 +334,110 @@ export default function VerifyPage() {
                   </div>
                 </div>
 
+                {/* Sezione verifica documento — visibile solo se consenso valido */}
+                {isValid && (
+                  <div className="space-y-4 mt-4">
+                    {/* Link al documento su IPFS */}
+                    {cidLoading && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Spinner className="h-4 w-4" /> Recupero CID dall'evento
+                        on-chain...
+                      </div>
+                    )}
+
+                    {cid && (
+                      <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">IPFS CID</span>
+                          {/* <DocumentHashRow
+                            documentHash={cid as `0x${string}`}
+                          /> */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="flex items-center gap-2 text-sm text-muted-foreground ">
+                              <Hash className="h-4 w-4" />
+                              Document Hash
+                            </span>
+                            <span className="font-mono text-xs break-all">
+                              {cid as `0x${string}`}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 w-full"
+                          asChild
+                        >
+                          <a
+                            href={`${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${cid}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Apri documento su IPFS
+                          </a>
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Verifica crittografica locale
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-primary" />
+                        Verifica crittografica documento
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        Carica il documento fisico per verificare che
+                        corrisponda esattamente a quello registrato on-chain.
+                      </p>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        id="verify-file"
+                        className="hidden"
+                        onChange={handleFileVerify}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 w-full"
+                        onClick={() =>
+                          document.getElementById("verify-file")?.click()
+                        }
+                      >
+                        <Upload className="h-4 w-4" />
+                        Carica PDF per verifica
+                      </Button>
+                      {fileVerifyLoading && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Spinner className="h-4 w-4" />
+                          Verifica in corso...
+                        </div>
+                      )}
+                      {fileVerifyResult === "match" && (
+                        <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Documento autentico — hash corrisponde al valore
+                          on-chain
+                        </div>
+                      )}
+                      {fileVerifyResult === "mismatch" && (
+                        <div className="flex items-center gap-2 text-destructive text-sm font-medium">
+                          <XCircle className="h-4 w-4" />
+                          Documento non autentico — hash non corrisponde
+                        </div>
+                      )}
+                    </div> */}
+                  </div>
+                )}
                 <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4">
                   <h4 className="mb-2 flex items-center gap-2 font-medium">
                     <Shield className="h-4 w-4 text-emerald-500" />
                     Verifica On-Chain
                   </h4>
                   <p className="mb-3 text-sm text-muted-foreground">
-                    Questo consenso è registrato immutabilmente sulla blockchain.
+                    Questo consenso è registrato immutabilmente sulla
+                    blockchain.
                   </p>
                   <Button variant="outline" size="sm" className="gap-2" asChild>
                     <a
@@ -278,7 +452,6 @@ export default function VerifyPage() {
                 </div>
               </CardContent>
             </Card>
-
           ) : (
             <Card className="border-destructive/30">
               <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
@@ -288,12 +461,15 @@ export default function VerifyPage() {
                 <div>
                   <h3 className="font-medium">Nessun Consenso Trovato</h3>
                   <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                    Il paziente non ha fornito un consenso attivo, oppure è stato revocato.
+                    Il paziente non ha fornito un consenso attivo, oppure è
+                    stato revocato.
                   </p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-left w-full">
                   <p className="text-xs text-muted-foreground">Paziente</p>
-                  <p className="font-mono text-sm">{truncateAddress(patientAddress)}</p>
+                  <p className="font-mono text-sm">
+                    {truncateAddress(patientAddress)}
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -71,7 +71,7 @@ export default function MobileMenu({
                   className={cn(
                     "flex items-center text-sm uppercase text-white cursor-pointer active:scale-95 ",
                     item.href == path &&
-                      "text-secondary lg:text-secondary font-bold text-md"
+                      "text-white  font-bold text-md"
                   )}
                 >
                   {item.name}
