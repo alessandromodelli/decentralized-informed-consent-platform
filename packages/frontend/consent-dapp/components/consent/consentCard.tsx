@@ -3,7 +3,14 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, FileCheck, FileX, Clock, Hash, Check, Copy } from "lucide-react";
+import {
+  FileCheck,
+  FileX,
+  Clock,
+  Hash,
+  Check,
+  Copy,
+} from "lucide-react";
 import { type ConsentRecord } from "@/hooks/useGetConsents";
 import { useState } from "react";
 
@@ -141,24 +148,8 @@ export function ConsentCard({
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 text-muted-foreground hover:text-foreground"
-            asChild
-          >
-            <a
-              href={`https://amoy.polygonscan.com/search?q=${consent.documentHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Vedi su PolygonScan
-            </a>
-          </Button>
-
-          {showRevokeButton && consent.isValid && onRevoke && (
+        {showRevokeButton && consent.isValid && onRevoke && (
+          <div className="flex items-center justify-between pt-2">
             <Button
               variant="destructive"
               size="sm"
@@ -166,8 +157,8 @@ export function ConsentCard({
             >
               Revoca
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
