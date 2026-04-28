@@ -1,0 +1,30 @@
+type Consent @entity(immutable: false) {
+  id:           Bytes!
+  patient:      Bytes!
+  documentHash: Bytes!
+  ipfsCid:      String!
+  isValid:      Boolean!
+  timestamp:    BigInt!
+  version:      Int!
+  revokedAt:    BigInt
+}
+
+type ConsentGivenEvent @entity(immutable: true) {
+  id:           Bytes!
+  patient:      Bytes!
+  documentHash: Bytes!
+  ipfsCid:      String!
+  timestamp:    BigInt!
+  version:      Int!
+  blockNumber:  BigInt!
+  txHash:       Bytes!
+}
+
+type ConsentRevokedEvent @entity(immutable: true) {
+  id:           Bytes!
+  patient:      Bytes!
+  documentHash: Bytes!
+  timestamp:    BigInt!
+  blockNumber:  BigInt!
+  txHash:       Bytes!
+}

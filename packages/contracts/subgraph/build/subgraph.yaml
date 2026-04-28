@@ -1,0 +1,30 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ConsentManager
+    network: polygon-amoy
+    source:
+      address: "0xd5e0c32C74c20e47E039D046766780524D65ac4A"
+      abi: ConsentManager
+      startBlock: 37378035
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Consent
+        - ConsentGivenEvent
+        - ConsentRevokedEvent
+      abis:
+        - name: ConsentManager
+          file: ConsentManager/ConsentManager.json
+      eventHandlers:
+        - event: ConsentGiven(indexed address,indexed bytes32,string,uint256,uint8)
+          handler: handleConsentGiven
+        - event: ConsentRevoked(indexed address,indexed bytes32,uint256)
+          handler: handleConsentRevoked
+      file: ConsentManager/ConsentManager.wasm
