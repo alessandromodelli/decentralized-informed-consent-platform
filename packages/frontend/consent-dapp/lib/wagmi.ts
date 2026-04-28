@@ -12,15 +12,7 @@ export const config = createConfig(
     transports: {
       // [hardhat.id]: http("http://127.0.0.1:8545"),
       [mainnet.id]: http("https://cloudflare-eth.com"),
-      [polygonAmoy.id]: fallback([
-        // RPC pubblico Polygon 
-        http("https://rpc-amoy.polygon.technology"),
-        // Alchemy come fallback per le transazioni
-        http(
-          process.env.NEXT_PUBLIC_RPC_URL ??
-            "https://rpc-amoy.polygon.technology",
-        ),
-      ]),
+      [polygonAmoy.id]: http("/api/rpc"),
       //[localhost.id]: http('http://127.0.0.1:8545'),
     },
     walletConnectProjectId: "", // non necessario per MetaMask-only

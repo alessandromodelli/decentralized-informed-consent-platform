@@ -22,6 +22,8 @@ import {
   Clock,
   Hash,
   ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 
 function formatRelativeTime(timestamp: bigint): string {
@@ -70,6 +72,14 @@ export default function VerifyPage() {
   //   "idle" | "match" | "mismatch"
   // >("idle");
   // const [fileVerifyLoading, setFileVerifyLoading] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(address || "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const validPatient =
     hasSearched && isAddress(patientAddress)
@@ -155,7 +165,6 @@ export default function VerifyPage() {
         setCid(c);
         setCidLoading(false);
       });
-
     }
   }, [isValid, validPatient, validHash]);
 
@@ -246,11 +255,22 @@ export default function VerifyPage() {
           </Button>
 
           {isConnected && (
-            <div className="rounded-lg bg-muted/50 p-3">
+            <div className="rounded-lg bg-muted/50 p-3 flex flex-row items-between gap-4">
               <p className="text-xs text-muted-foreground">
                 Stai verificando come:
               </p>
               <p className="font-mono text-sm break-all">{address}</p>
+              <button
+                onClick={handleCopy}
+                className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                title="Copia hash completo"
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </button>
             </div>
           )}
         </CardContent>
