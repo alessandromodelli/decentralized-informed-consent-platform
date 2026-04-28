@@ -1,7 +1,7 @@
 "use client";
 
 import { usePublicClient, useReadContract } from "wagmi";
-import { type Address } from "viem";
+import { createPublicClient, http, type Address } from "viem";
 import { polygonAmoy } from "wagmi/chains";
 import { CONSENT_CONTRACT_ADDRESS, CONSENT_CONTRACT_ABI } from "@/lib/contract";
 
@@ -16,7 +16,10 @@ export function useVerifyConsent(
   patientAddress?: Address,
   documentHash?: `0x${string}`,
 ) {
-  const publicClient = usePublicClient();
+  const publicClient = createPublicClient({
+    chain: polygonAmoy,
+    transport: http("/api/rpc-logs"),
+  });
 
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONSENT_CONTRACT_ADDRESS,
@@ -42,7 +45,6 @@ export function useVerifyConsent(
   ): Promise<string | null> {
     if (!publicClient) return null;
     try {
-
       //A causa del piano gratuito di Alchemy, non possiamo usare il loro RPC per chiamare eth_getLogs su range > 10 blocchi. In questo modo siamo sicuri di trovare l'evento anche se è stato emesso molto tempo fa o se ci sono molti eventi (cosa probabile in un'app reale). Se il contratto è nuovo e non ci sono molti eventi, questa funzione restituirà comunque il risultato al primo tentativo senza ritardi significativi. Per un discorso di scalabilità è necessario utilizzare un piano con un range di blocchi maggiore o una soluzione differente come The Graph
       const currentBlock = await publicClient.getBlockNumber();
       const CHUNK_SIZE = BigInt(10); // 1000 blocchi per chunk — sotto il limite

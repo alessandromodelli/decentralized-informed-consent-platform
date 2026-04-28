@@ -1,12 +1,7 @@
 // packages/frontend/src/app/api/compute-hash/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { keccak256, toBytes } from "viem";
-import { PinataSDK } from "pinata";
-
-const pinata = new PinataSDK({
-  pinataJwt: process.env.NEXT_PUBLIC_PINATA_JWT!,
-  pinataGateway: process.env.NEXT_PUBLIC_PINATA_GATEWAY,
-});
+import { pinata } from "@/utils/config";
 
 export async function POST(req: NextRequest) {
   try {
