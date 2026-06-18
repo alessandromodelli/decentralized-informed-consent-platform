@@ -39,6 +39,8 @@ type ConsentState =
   | "done"
   | "error";
 
+type ErrorState = "CONSENT_ALREADY_ACTIVE" | "GENERIC_ERROR";
+
 export default function GiveConsentPage() {
   const router = useRouter();
   const { isConnected } = useConnection();
@@ -47,6 +49,7 @@ export default function GiveConsentPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [consentState, setConsentState] = useState<ConsentState>("idle");
+  const [errorState, setErrorState] = useState<ErrorState | null>(null);
   const [result, setResult] = useState<{
     txHash: string;
     cid: string;
@@ -96,6 +99,12 @@ export default function GiveConsentPage() {
       }
     } catch (err) {
       console.error("Errore durante il consenso:", err);
+      const message = err instanceof Error ? err.message : String(err);
+      setErrorState(
+        message === "CONSENT_ALREADY_ACTIVE"
+          ? "CONSENT_ALREADY_ACTIVE"
+          : "GENERIC_ERROR",
+      );
       setConsentState("error");
     }
   };
@@ -282,7 +291,9 @@ export default function GiveConsentPage() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Errore</AlertTitle>
                 <AlertDescription>
-                  {error?.message || "Si è verificato un errore. Riprova."}
+                  {errorState === "CONSENT_ALREADY_ACTIVE"
+                    ? "Consenso gia attivo."
+                    : "Si è verificato un errore. Riprova."}
                 </AlertDescription>
               </Alert>
             )}
